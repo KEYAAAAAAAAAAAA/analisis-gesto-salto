@@ -68,8 +68,13 @@ if video_file:
                 col2.metric("Duración analizada", f"{round(len(df)/fps, 2)} seg")
                 
                 # Gráfico
-                fig = px.line(df, x='Tiempo_Segundos', y='Altura_Invertida', title="Desplazamiento Vertical de Cadera")
-                fig.add_hline(y=umbral, line_dash="dash", line_color="red", annotation_text="Umbral de Detección")
-                st.plotly_chart(fig, use_container_width=True)
+fig = px.line(df, x='Tiempo_Segundos', y='Altura_Invertida', title="Desplazamiento Vertical de Cadera")
+fig.add_hline(y=umbral, line_dash="dash", line_color="red", annotation_text="Umbral de Detección")
+
+# Forzar la visualización de decimales exactos (centésimas de segundo)
+fig.update_xaxes(tickformat=".2f")
+fig.update_traces(hovertemplate="Tiempo: %{x:.2f} seg<br>Altura: %{y:.3f}")
+
+st.plotly_chart(fig, use_container_width=True)
             else:
                 st.error("No se detectó el cuerpo en el video. Usa una toma de cuerpo completo.")
