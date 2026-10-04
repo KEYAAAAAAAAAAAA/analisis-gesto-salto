@@ -85,5 +85,5 @@ fig.update_xaxes(
 fig.update_traces(hovertemplate="Tiempo: %{x:.2f} seg<br>Altura: %{y:.3f}")
 
 st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.error("No se detectó el cuerpo en el video. Usa una toma de cuerpo completo.")
+else:
+    st.error("No se detectó el cuerpo en el video. Usa una toma de cuerpo completo.")
