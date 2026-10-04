@@ -50,7 +50,7 @@ if video_file:
                 df['Tiempo_Segundos'] = df.index / fps
                 
                 # Algoritmo de conteo (detectar cuando sube y baja del promedio)
-                umbral = df['Altura_Invertida'].mean() + 0.01
+                umbral = df['Altura_Invertida'].mean() + 0.001
                 saltos_detectados = 0
                 en_fase_vuelo = False
                 
