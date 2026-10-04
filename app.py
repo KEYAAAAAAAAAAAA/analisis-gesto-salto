@@ -15,7 +15,7 @@ if video_file:
     tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
     tfile.write(video_file.read())
     
-    st.video(video_file.name)
+    st.video(tfile.name)
     
     if st.button("Iniciar Análisis Cuantitativo"):
         with st.spinner("Procesando fotogramas con Inteligencia Artificial..."):
