@@ -67,9 +67,23 @@ if video_file:
                 col1.metric("Cantidad de Saltos (Frecuencia)", f"{saltos_detectados} saltos")
                 col2.metric("Duración analizada", f"{round(len(df)/fps, 2)} seg")
                 
-               # Gráfico
-                fig = px.line(df, x='Tiempo_Segundos', y='Altura_Invertida', title="Desplazamiento Vertical de Cadera")
-                fig.add_hline(y=umbral, line_dash="dash", line_color="red", annotation_text="Umbral de Detección")
-                st.plotly_chart(fig, use_container_width=True)
+               # 1. Convertir estrictamente la columna a números decimales
+df['Tiempo_Segundos'] = df['Tiempo_Segundos'].astype(float)
+
+# 2. Crear el gráfico base
+fig = px.line(df, x='Tiempo_Segundos', y='Altura_Invertida', title="Desplazamiento Vertical de Cadera")
+fig.add_hline(y=umbral, line_dash="dash", line_color="red", annotation_text="Umbral de Detección")
+
+# 3. Forzar el eje X a ser numérico (lineal) y aplicar formato de 2 decimales
+fig.update_xaxes(
+    type='linear',
+    tickformat=".2f",
+    title_text="Tiempo (Segundos)"
+)
+
+# 4. Formatear la etiqueta flotante al pasar el mouse
+fig.update_traces(hovertemplate="Tiempo: %{x:.2f} seg<br>Altura: %{y:.3f}")
+
+st.plotly_chart(fig, use_container_width=True)
             else:
                 st.error("No se detectó el cuerpo en el video. Usa una toma de cuerpo completo.")
