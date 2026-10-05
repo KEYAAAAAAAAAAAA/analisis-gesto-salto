@@ -1,4 +1,4 @@
-# 🤸 Análisis Bioinstrumental: Conteo Automatizado de Saltos
+# Análisis Bioinstrumental: Conteo Automatizado de Saltos
 
 ¡Hola! Bienvenid@ al repositorio y documentación de nuestro proyecto. Esta aplicación nace de la necesidad kinesiológica de contar con una herramienta **portable, gratuita y objetiva** para evaluar la capacidad pliométrica y la cadencia de salto en atletas o pacientes.
 
@@ -6,7 +6,7 @@ En la evaluación de campo tradicional, la cantidad de saltos se registra median
 
 ---
 
-## 🛠️ ¿Cómo funciona el código? (Explicación paso a paso)
+## ¿Cómo funciona el código? (Explicación paso a paso)
 
 Aunque no tengo una formación especializada en programación, he estructurado la lógica de este script para que replique el flujo cinemático de una evaluación biomecánica. A continuación, explico el funcionamiento de cada sección del código:
 
@@ -55,7 +55,7 @@ $$\text{Umbral} = \text{Mediana}(\text{Altura\_Invertida}) + 0.05$$
 
 ---
 
-## 📚 Librerías Utilizadas y su Función
+## Librerías Utilizadas y su Función
 
 | Librería | Función en el Proyecto |
 | --- | --- |
@@ -68,7 +68,7 @@ $$\text{Umbral} = \text{Mediana}(\text{Altura\_Invertida}) + 0.05$$
 
 ---
 
-## 📋 Instrucciones de Uso
+## Instrucciones de Uso
 
 1. Accede a la aplicación a través del enlace público en **Streamlit Cloud**.
 2. Haz clic en **"Browse files"** y sube un video grabado de perfil en formato `.mp4` o `.mov`.
@@ -78,7 +78,7 @@ $$\text{Umbral} = \text{Mediana}(\text{Altura\_Invertida}) + 0.05$$
 
 ---
 
-## 🎥 Criterios para un Registro de Video Adecuado
+## Criterios para un Registro de Video Adecuado
 
 Para asegurar que el algoritmo procese los datos sin margen de error:
 
