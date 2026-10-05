@@ -6,7 +6,7 @@ En la evaluación de campo tradicional, la cantidad de saltos se registra median
 
 ---
 
-## ¿Cómo funciona el código? (Explicación paso a paso)
+## ¿Cómo funciona el código?
 
 Aunque no tengo una formación especializada en programación, he estructurado la lógica de este script para que replique el flujo cinemático de una evaluación biomecánica. A continuación, explico el funcionamiento de cada sección del código:
 
@@ -15,13 +15,13 @@ Aunque no tengo una formación especializada en programación, he estructurado l
 * La librería **Streamlit** se encarga de estructurar la pantalla web, agregando títulos, el cargador de archivos (`st.file_uploader`) y las ventanas de resultados.
 * Cuando el usuario sube un video (`.mp4` o `.mov`), el código utiliza `tempfile.NamedTemporaryFile` para guardarlo momentáneamente en el servidor. Esto es indispensable porque la librería de procesamiento de video (**OpenCV**) necesita una ruta física en disco para leer el archivo fotograma a fotograma.
 
-### 2. Detección de Puntos Anatómicos (`OpenCV` y `MediaPipe Pose`)
+### 2. Detección de Puntos Anatómicos 
 
 * El código procesa el video dentro de un bucle `while cap.isOpened()`.
 * **Transformación de Color:** OpenCV lee las imágenes en formato **BGR** (Blue, Green, Red), pero el modelo de inteligencia artificial **MediaPipe** requiere el formato estándar **RGB** (Red, Green, Blue). Por ello, aplicamos `cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)`.
 * **Rastreo de la Cadera:** MediaPipe detecta 33 puntos clave del cuerpo (*landmarks*). Extraemos la coordenada vertical ($Y$) de la **cadera izquierda** (`LEFT_HIP`, punto 23), la cual representa adecuadamente el desplazamiento vertical del centro de masa.
 
-### 3. Inversión Cinemática y Eje de Tiempo (`Pandas`)
+### 3. Inversión Cinemática y Eje de Tiempo 
 
 * **Inversión de Coordenadas:** En visión por computador, la esquina superior izquierda de la imagen es el origen $(0,0)$. Esto implica que cuando la persona salta hacia arriba, el valor numérico de la coordenada $Y$ disminuye. Para que el gráfico sea biomecánicamente intuitivo (donde la cima del salto corresponda al punto más alto de la curva), aplicamos la transformación:
 
@@ -48,7 +48,7 @@ $$\text{Umbral} = \text{Mediana}(\text{Altura\_Invertida}) + 0.05$$
 
 
 
-### 5. Presentación de Resultados y Gráfico Interactivo (`Plotly`)
+### 5. Presentación de Resultados y Gráfico Interactivo 
 
 * **Métricas Principales:** Mediante `st.metric`, la pantalla muestra de forma clara dos tarjetas con el número total de saltos contabilizados y la duración total del análisis en segundos (`len(df) / fps`).
 * **Gráfica de Desplazamiento:** Utilizando **Plotly Express**, se genera una curva interactiva que grafica la posición de la cadera en función del tiempo y dibuja una línea roja segmentada (`fig.add_hline`) que marca visualmente el umbral de corte.
