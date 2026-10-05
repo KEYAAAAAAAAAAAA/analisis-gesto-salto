@@ -1,130 +1,87 @@
-Aquí tienes la propuesta de **`README.md`** estructurada y profesional para tu repositorio de GitHub (`analisis-gero-sako`), ajustada al flujo original de tu código (detección de pose, inversión de ejes, conteo de saltos y gráfica interactiva con Plotly):
+# 🤸 Análisis Bioinstrumental: Conteo Automatizado de Saltos
+
+¡Hola! Bienvenid@ al repositorio y documentación de nuestro proyecto. Esta aplicación nace de la necesidad kinesiológica de contar con una herramienta **portable, gratuita y objetiva** para evaluar la capacidad pliométrica y la cadencia de salto en atletas o pacientes.
+
+En la evaluación de campo tradicional, la cantidad de saltos se registra mediante observación directa y cronometraje manual (lo que genera un alto margen de error humano) o con plataformas de contacto de laboratorio (que resultan sumamente costosas y difíciles de transportar). A través de este código escrito en Python y desplegado en la web con Streamlit, logramos automatizar el conteo a partir de un simple video grabado con un teléfono celular.
 
 ---
 
-```markdown
-# 🏋️‍♂️ Análisis Bioinstrumental: Conteo de Saltos y Cadencia Pliométrica
+## 🛠️ ¿Cómo funciona el código? (Explicación paso a paso)
 
-Aplicación web interactiva desarrollada en **Python** y **Streamlit** para la evaluación biomecánica y cuantificación automática de saltos en tiempo real mediante visión por computador y estimación postural (*Pose Estimation*).
+Aunque no tengo una formación especializada en programación, he estructurado la lógica de este script para que replique el flujo cinemático de una evaluación biomecánica. A continuación, explico el funcionamiento de cada sección del código:
 
----
+### 1. Interfaz y Almacenamiento Temporal (`Streamlit` y `tempfile`)
 
-## 📌 Descripción del Proyecto
+* La librería **Streamlit** se encarga de estructurar la pantalla web, agregando títulos, el cargador de archivos (`st.file_uploader`) y las ventanas de resultados.
+* Cuando el usuario sube un video (`.mp4` o `.mov`), el código utiliza `tempfile.NamedTemporaryFile` para guardarlo momentáneamente en el servidor. Esto es indispensable porque la librería de procesamiento de video (**OpenCV**) necesita una ruta física en disco para leer el archivo fotograma a fotograma.
 
-El análisis cinemático del salto es una prueba fundamental en Kinesiología y Ciencias del Deporte para evaluar la fuerza reactiva, la potencia muscular y la cadencia pliométrica. Tradicionalmente, esta evaluación requiere plataformas de contacto o sistemas de captura de movimiento costosos.
+### 2. Detección de Puntos Anatómicos (`OpenCV` y `MediaPipe Pose`)
 
-Esta plataforma ofrece una alternativa **portátil, accesible y objetiva** que permite a profesionales de la salud y entrenadores procesar archivos de video y obtener métricas cuantitativas instantáneas mediante algoritmos de inteligencia artificial.
+* El código procesa el video dentro de un bucle `while cap.isOpened()`.
+* **Transformación de Color:** OpenCV lee las imágenes en formato **BGR** (Blue, Green, Red), pero el modelo de inteligencia artificial **MediaPipe** requiere el formato estándar **RGB** (Red, Green, Blue). Por ello, aplicamos `cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)`.
+* **Rastreo de la Cadera:** MediaPipe detecta 33 puntos clave del cuerpo (*landmarks*). Extraemos la coordenada vertical ($Y$) de la **cadera izquierda** (`LEFT_HIP`, punto 23), la cual representa adecuadamente el desplazamiento vertical del centro de masa.
 
----
+### 3. Inversión Cinemática y Eje de Tiempo (`Pandas`)
 
-## ✨ Características Principales
+* **Inversión de Coordenadas:** En visión por computador, la esquina superior izquierda de la imagen es el origen $(0,0)$. Esto implica que cuando la persona salta hacia arriba, el valor numérico de la coordenada $Y$ disminuye. Para que el gráfico sea biomecánicamente intuitivo (donde la cima del salto corresponda al punto más alto de la curva), aplicamos la transformación:
 
-- **Carga de Video Flexible:** Admite archivos de video de cuerpo completo en formatos `.mp4`, `.mov` y `.avi`.
-- **Rastreo Anatomofisiológico:** Detección automática del punto de la cadera (*LEFT_HIP*) mediante **MediaPipe Pose**.
-- **Procesamiento Cinemático:**
-  - Inversión matemática del eje $Y$ para reflejar el comportamiento vertical real del salto.
-  - Conversión del índice de fotogramas a tiempo continuo en segundos ($\text{FPS}$).
-  - Algoritmo cinemático para la identificación y conteo automático de cada salto.
-- **Métricas Instantáneas:**
-  - N° Total de Saltos Detectados.
-  - Duración total de la prueba (segundos).
-- **Gráfica Interactiva:** Visualización cinemática con **Plotly**, que incluye estampa de tiempo, altura relativa y delimitación del umbral de conteo.
+$$\text{Altura\_Invertida} = 1 - \text{Altura\_Cadera}$$
 
----
 
-## 📐 Fundamento Algorítmico y Matemático
+* **Cálculo de Tiempo:** Dividimos el índice de cada fotograma entre la tasa de fotogramas por segundo del video ($\text{FPS}$):
 
-1. **Estimación Postural (MediaPipe Pose):**
-   Se utiliza el modelo de visión por computador para rastrear el **Landmark 23** (*cadera izquierda / LEFT_HIP*), garantizando estabilidad cinemática durante el ciclo del salto.
+$$\text{Tiempo\_Segundos} = \frac{\text{Índice}}{\text{FPS}}$$
 
-2. **Inversión de Coordenadas:**
-   En visión por computador, el origen $(0,0)$ se ubica en la esquina superior izquierda. Para alinear el gráfico con la elevación real del cuerpo, se aplica la transformación:
-   $$Y_{\text{inverso}} = 1 - Y_{\text{normado}}$$
 
-3. **Eje Temporal Real:**
-   El tiempo en segundos para cada fotograma se calcula a partir de la tasa de refresco ($FPS$) extraída del video:
-   $$\text{Tiempo } (s) = \frac{\text{Fotograma}}{\text{FPS}}$$
 
-4. **Conteo de Saltos:**
-   El algoritmo evalúa la trayectoria vertical de la cadera identificando las fases de despegue y elevación máxima cuando la curva cruza el umbral de activación definido en la prueba.
+### 4. Algoritmo de Detección por Umbral y Fase de Vuelo
 
----
+* **Cálculo del Umbral Dinámico:** Para evitar que pequeños temblores o movimientos posturales mínimos cuenten como saltos, calculamos la mediana de la altura de la cadera en todo el video y le sumamos un margen del $5\%$ ($0.05$):
 
-## 🛠️ Tecnologías Utilizadas
+$$\text{Umbral} = \text{Mediana}(\text{Altura\_Invertida}) + 0.05$$
 
-- **Lenguaje:** Python 3.9+
-- **Interfaz Web:** [Streamlit](https://streamlit.io/)
-- **Visión por Computador:** [OpenCV](https://opencv.org/) & [MediaPipe Pose](https://developers.google.com/mediapipe)
-- **Visualización de Datos:** [Plotly Express / Graph Objects](https://plotly.com/python/)
-- **Procesamiento Numérico:** NumPy / Pandas
+
+* **Máquina de Estados (`en_fase_vuelo`):**
+* El código recorre la serie de tiempo evaluando la posición de la cadera.
+* Si la altura invertida supera la línea del umbral (`y > umbral`) y el sujeto no estaba registrado en el aire (`not en_fase_vuelo`), el sistema suma **+1 al contador de saltos** y cambia la variable a `en_fase_vuelo = True`.
+* Cuando la cadera vuelve a descender por debajo del umbral (`y < umbral`), la variable regresa a `en_fase_vuelo = False`, quedando lista para la siguiente repetición.
+
+
+
+### 5. Presentación de Resultados y Gráfico Interactivo (`Plotly`)
+
+* **Métricas Principales:** Mediante `st.metric`, la pantalla muestra de forma clara dos tarjetas con el número total de saltos contabilizados y la duración total del análisis en segundos (`len(df) / fps`).
+* **Gráfica de Desplazamiento:** Utilizando **Plotly Express**, se genera una curva interactiva que grafica la posición de la cadera en función del tiempo y dibuja una línea roja segmentada (`fig.add_hline`) que marca visualmente el umbral de corte.
 
 ---
 
-## 📁 Estructura del Repositorio
+## 📚 Librerías Utilizadas y su Función
 
-```text
-analisis-gero-sako/
-├── app.py              # Código fuente principal de la aplicación Streamlit
-├── requirements.txt    # Dependencias del proyecto
-└── README.md           # Documentación técnica del proyecto
-
-```
-
----
-
-## 🚀 Instalación y Ejecución Local
-
-1. **Clonar el repositorio:**
-```bash
-git clone [https://github.com/tu-usuario/analisis-gero-sako.git](https://github.com/tu-usuario/analisis-gero-sako.git)
-cd analisis-gero-sako
-
-```
-
-
-2. **Crear y activar un entorno virtual (recomendado):**
-```bash
-python -m venv venv
-# En Windows:
-venv\Scripts\activate
-# En macOS/Linux:
-source venv/bin/activate
-
-```
-
-
-3. **Instalar dependencias:**
-```bash
-pip install -r requirements.txt
-
-```
-
-
-4. **Ejecutar la aplicación:**
-```bash
-streamlit run app.py
-
-```
-
-
+| Librería | Función en el Proyecto |
+| --- | --- |
+| `streamlit` | Genera la plataforma web interactiva (botones, cargador de archivos, tarjetas de métricas). |
+| `cv2` (OpenCV) | Lee el archivo de video fotograma por fotograma y convierte los espacios de color (BGR a RGB). |
+| `mediapipe` | Modelo de Inteligencia Artificial que detecta la postura del cuerpo y entrega las coordenadas de la cadera. |
+| `tempfile` | Permite crear un archivo temporal en el servidor para que OpenCV pueda procesar el video cargado. |
+| `pandas` | Organiza los datos extraídos en una tabla (DataFrame) para realizar cálculos matemáticos de forma limpia. |
+| `plotly.express` | Dibuja la gráfica cinemática interactiva con la línea del umbral de detección. |
 
 ---
 
-## 🎥 Recomendaciones para la Grabación del Video
+## 📋 Instrucciones de Uso
 
-Para garantizar la mayor precisión en la detección:
-
-* **Encuadre:** Plano general que mantenga al sujeto en vista de **cuerpo completo** durante toda la prueba.
-* **Cámara:** Dispositivo fijo (preferiblemente en trípode) para evitar desplazamientos del fondo.
-* **Plano:** Vista sagital (lateral) o frontal.
-* **Iluminación:** Buena iluminación y contraste entre el sujeto y el fondo.
+1. Accede a la aplicación a través del enlace público en **Streamlit Cloud**.
+2. Haz clic en **"Browse files"** y sube un video grabado de perfil en formato `.mp4` o `.mov`.
+3. Comprueba en el reproductor de video integrado que el atleta esté enfocado correctamente.
+4. Presiona el botón **"Iniciar Análisis Cuantitativo"**.
+5. Revisa la cantidad de saltos contabilizados y analiza la regularidad del movimiento en el gráfico de desplazamiento vertical.
 
 ---
 
-## 👥 Autores y Créditos
+## 🎥 Criterios para un Registro de Video Adecuado
 
-Proyecto desarrollado para la asignatura de **Bioinstrumentación / Biomecánica**.
+Para asegurar que el algoritmo procese los datos sin margen de error:
 
-```
-
-```
+* **Encuadre Completo:** Graba al atleta de cuerpo entero (cabeza a pies). Si los pies o la pelvis salen del encuadre, la IA perderá el rastreo.
+* **Cámara Fija:** Es fundamental utilizar un trípode o apoyar la cámara sobre una superficie estable; el movimiento de la cámara altera la línea base del umbral.
+* **Plano:** Mantén una toma perpendicular (de perfil o de frente) a una velocidad estándar de 30 a 60 FPS.
